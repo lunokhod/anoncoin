@@ -125,6 +125,18 @@ public:
 extern const CRPCTable tableRPC;
 extern CReserveKey* pMiningKey;
 
+//
+// Utilities: convert hex-encoded Values
+// (throws error if not hex).
+//
+extern uint256 ParseHashV(const json_spirit::Value& v, std::string strName);
+extern uint256 ParseHashO(const json_spirit::Object& o, std::string strKey);
+extern std::vector<unsigned char> ParseHexV(const json_spirit::Value& v, std::string strName);
+extern std::vector<unsigned char> ParseHexO(const json_spirit::Object& o, std::string strKey);
+
+extern void InitRPCMining();
+extern void ShutdownRPCMining();
+
 extern int64 nWalletUnlockTime;
 extern int64 AmountFromValue(const json_spirit::Value& value);
 extern json_spirit::Value ValueFromAmount(int64 amount);
