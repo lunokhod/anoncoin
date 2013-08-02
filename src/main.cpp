@@ -1639,6 +1639,10 @@ void ThreadScriptCheck() {
 
 bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsViewCache &view, bool fJustCheck)
 {
+    // Anoncoin
+    // Special case, jumps over checking the genesis block.
+    if (GetHash() == hashGenesisBlock)
+        return true;
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(state, !fJustCheck, !fJustCheck))
         return false;
