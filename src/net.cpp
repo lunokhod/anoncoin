@@ -1111,7 +1111,7 @@ void ThreadMapPort()
             }
         }
 
-        string strDesc = "Litecoin " + FormatFullVersion();
+        string strDesc = "Anoncoin " + FormatFullVersion();
 
         try {
             loop {
@@ -1190,18 +1190,25 @@ void MapPort(bool)
 // Each pair gives a source name and a seed name.
 // The first name is used as information source for addrman.
 // The second name should resolve to a list of seed addresses.
-static const char *strMainNetDNSSeed[][2] = {
-    {"litecointools.com", "dnsseed.litecointools.com"},
-    {"litecoinpool.org", "dnsseed.litecoinpool.org"},
-    {"xurious.com", "dnsseed.ltc.xurious.com"},
-    {"koin-project.com", "dnsseed.koin-project.com"},
-    {"weminemnc.com", "dnsseed.weminemnc.com"},
-    {NULL, NULL}
+static const char *strDNSSeed[][2] = {
+    {"coinpool.in", "anoncoin.dnsseed.coinpool.in"},
+    {"anoncoin.net", "dnsseed01.anoncoin.net"}
 };
 
-static const char *strTestNetDNSSeed[][2] = {
+#ifdef USE_NATIVE_I2P
+static const char *strI2PDNSSeed[][2] = {
+    {"d46o5wddsdrvg2ywnu4o57zeloayt7oyg56adz63xukordgfommq.b32.i2p","d46o5wddsdrvg2ywnu4o57zeloayt7oyg56adz63xukordgfommq.b32.i2p"},
+    {"aa2vgk6qr6u5eaujni5vaucuadpleyq5nbjx56lclgr6jjbmbvrq.b32.i2p", "aa2vgk6qr6u5eaujni5vaucuadpleyq5nbjx56lclgr6jjbmbvrq.b32.i2p"},
+    {"u2om3hgjpghqfi7yid75xdmvzlgjybstzp6mtmaxse4aztm23rwq.b32.i2p", "u2om3hgjpghqfi7yid75xdmvzlgjybstzp6mtmaxse4aztm23rwq.b32.i2p"},
+    {"htigbyeisbqizn63ftqw7ggfwfeolwkb3zfxwmyffygbilwqsswq.b32.i2p", "htigbyeisbqizn63ftqw7ggfwfeolwkb3zfxwmyffygbilwqsswq.b32.i2p"},
+    {"st4eyxcp73zzbpatgt26pt3rlfwb7g5ywedol65baalgpnhvzqpa.b32.i2p", "st4eyxcp73zzbpatgt26pt3rlfwb7g5ywedol65baalgpnhvzqpa.b32.i2p"},
+    {"qgmxpnpujddsd5ez67p4ognqsvo64tnzdbzesezdbtb3atyoxcpq.b32.i2p", "qgmxpnpujddsd5ez67p4ognqsvo64tnzdbzesezdbtb3atyoxcpq.b32.i2p"}
+};
+#endif
+
+static const char *strTestNetDNSSeed[][2] = {/*
     {"litecointools.com", "testnet-seed.litecointools.com"},
-    {"weminemnc.com", "testnet-seed.weminemnc.com"},
+    {"weminemnc.com", "testnet-seed.weminemnc.com"},*/
     {NULL, NULL}
 };
 
