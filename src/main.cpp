@@ -1641,14 +1641,13 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
 {
     // Anoncoin
     // Special case, jumps over checking the genesis block.
-    if (GetHash() == hashGenesisBlock)
-        return true;
     // Check it again in case a previous version let a bad block in
-    if (!CheckBlock(state, !fJustCheck, !fJustCheck))
+    if (!CheckBlock(state, !fJustCheck, !fJustCheck) && pindex->nHeight != 0)
         return false;
 
     // verify that the view's current state corresponds to the previous block
-    assert(pindex->pprev == view.GetBestBlock());
+    if (pindex->nHeight != 0)
+        assert(pindex->pprev == view.GetBestBlock());
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
