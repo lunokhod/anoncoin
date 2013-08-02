@@ -1,6 +1,6 @@
 TEMPLATE = app
-TARGET = litecoin-qt
-macx:TARGET = "Litecoin-Qt"
+TARGET = anoncoin-qt
+macx:TARGET = "Anoncoin-Qt"
 VERSION = 0.8.3.7
 INCLUDEPATH += src src/json src/qt
 QT += core gui network

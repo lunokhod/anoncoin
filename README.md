@@ -1,30 +1,32 @@
-Litecoin integration/staging tree
+Anoncoin integration/staging tree
 ================================
 
-http://www.litecoin.org
+https://anoncoin.net
 
 Copyright (c) 2009-2013 Bitcoin Developers
 Copyright (c) 2011-2013 Litecoin Developers
+Copyright (c) 2013 giv - i2psam library
+Copyright (c) 2013 Anoncoin Developers
 
-What is Litecoin?
+What is Anoncoin?
 ----------------
 
-Litecoin is a lite version of Bitcoin using scrypt as a proof-of-work algorithm.
- - 2.5 minute block targets
- - subsidy halves in 840k blocks (~4 years)
- - ~84 million total coins
+Anoncoin is a version of Bitcoin using scrypt as a proof-of-work algorithm.
+ - 3.42 minute block targets
+ - subsidy halves in ~306k blocks (~2 years)
+ - 4.2 million total coins
 
 The rest is the same as Bitcoin.
- - 50 coins per block
- - 2016 blocks to retarget difficulty
+ - variable (Started with 4.2, then 7, then 5) coins per block
+ - 1680 blocks to retarget difficulty, after block 77,777 it retargets per block
 
 For more information, as well as an immediately useable, binary version of
-the Litecoin client sofware, see http://www.litecoin.org.
+the Anoncoin client sofware, see https://anoncoin.net.
 
 License
 -------
 
-Litecoin is released under the terms of the MIT license. See `COPYING` for more
+Anoncoin is released under the terms of the MIT license. See `COPYING` for more
 information or see http://opensource.org/licenses/MIT.
 
 Development process
@@ -33,7 +35,7 @@ Development process
 Developers work in their own trees, then submit pull requests when they think
 their feature or bug fix is ready.
 
-If it is a simple/trivial/non-controversial change, then one of the Litecoin
+If it is a simple/trivial/non-controversial change, then one of the Anoncoin
 development team members simply pulls it.
 
 If it is a *more complicated or potentially controversial* change, then the patch
@@ -47,7 +49,7 @@ controversial.
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
 completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Litecoin.
+regularly to indicate new official, stable release versions of Anoncoin.
 
 Testing
 -------
@@ -68,7 +70,7 @@ Unit tests for the core code are in `src/test/`. To compile and run them:
 
 Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
 
-    qmake BITCOIN_QT_TEST=1 -o Makefile.test bitcoin-qt.pro
+    qmake BITCOIN_QT_TEST=1 -o Makefile.test anoncoin-qt.pro
     make -f Makefile.test
-    ./litecoin-qt_test
+    ./anoncoin-qt_test
 
