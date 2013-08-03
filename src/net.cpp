@@ -1351,9 +1351,8 @@ static const char *strI2PDNSSeed[][2] = {
 };
 #endif
 
-static const char *strTestNetDNSSeed[][2] = {/*
-    {"litecointools.com", "testnet-seed.litecointools.com"},
-    {"weminemnc.com", "testnet-seed.weminemnc.com"},*/
+static const char *strTestNetDNSSeed[][2] = {
+    {"anoncoin.net", "testnet-seed.anoncoin.net"},
     {NULL, NULL}
 };
 
