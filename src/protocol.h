@@ -18,7 +18,7 @@
 extern bool fTestNet;
 static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
 {
-    return testnet ? 19333 : 9333;
+    return testnet ? 19377 : 9377;
 }
 
 
@@ -70,6 +70,9 @@ enum
 {
     NODE_NETWORK = (1 << 0),
     NODE_BLOOM = (1 << 1),
+#ifdef USE_NATIVE_I2P
+    NODE_I2P     = (1 << 7),
+#endif
 };
 
 /** A CService with information about it as peer */

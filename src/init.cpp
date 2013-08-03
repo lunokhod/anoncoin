@@ -2,6 +2,9 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+//
+// I2P-patch
+// Copyright (c) 2012-2013 giv
 
 #include "txdb.h"
 #include "walletdb.h"
@@ -20,6 +23,10 @@
 
 #ifndef WIN32
 #include <signal.h>
+#endif
+
+#ifdef USE_NATIVE_I2P
+#include "i2p.h"
 #endif
 
 using namespace std;
@@ -273,6 +280,14 @@ bool static InitWarning(const std::string &str)
     return true;
 }
 
+#ifdef USE_NATIVE_I2P
+bool static BindNativeI2P(/*bool fError = true*/) {
+    if (IsLimited(NET_NATIVE_I2P))
+        return false;
+    return BindListenNativeI2P();
+}
+#endif
+
 bool static Bind(const CService &addr, unsigned int flags) {
     if (!(flags & BF_EXPLICIT) && IsLimited(addr))
         return false;
@@ -305,7 +320,7 @@ std::string HelpMessage()
         "  -connect=<ip>          " + _("Connect only to the specified node(s)") + "\n" +
         "  -seednode=<ip>         " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n" +
         "  -externalip=<ip>       " + _("Specify your own public address") + "\n" +
-        "  -onlynet=<net>         " + _("Only connect to nodes in network <net> (IPv4, IPv6 or Tor)") + "\n" +
+        "  -onlynet=<net>         " + _("Only connect to nodes in network <net> (IPv4, IPv6, I2P or Tor)") + "\n" +
         "  -discover              " + _("Discover own IP address (default: 1 when listening and no -externalip)") + "\n" +
         "  -checkpoints           " + _("Only accept block chain matching built-in checkpoints (default: 1)") + "\n" +
         "  -listen                " + _("Accept connections from outside (default: 1 if no -proxy or -connect)") + "\n" +
@@ -493,6 +508,19 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 
     // ********************************************************* Step 2: parameter interactions
+
+#ifdef USE_NATIVE_I2P
+    if (GetBoolArg(I2P_SAM_GENERATE_DESTINATION_PARAM)) {
+        const SAM::FullDestination generatedDest = I2PSession::Instance().destGenerate();
+        uiInterface.ThreadSafeShowGeneratedI2PAddress(
+            "Generated I2P address",
+            generatedDest.pub,
+            generatedDest.priv,
+            I2PSession::GenerateB32AddressFromDestination(generatedDest.pub),
+            GetConfigFile().string());
+        return false;
+    }
+#endif
 
     fTestNet = GetBoolArg("-testnet");
     fBloomFilters = GetBoolArg("-bloomfilters");
@@ -716,6 +744,15 @@ bool AppInit2(boost::thread_group& threadGroup)
         std::set<enum Network> nets;
         BOOST_FOREACH(std::string snet, mapMultiArgs["-onlynet"]) {
             enum Network net = ParseNetwork(snet);
+#ifdef USE_NATIVE_I2P
+            if (net == NET_NATIVE_I2P) {
+                // Disable upnp and listening on I2P only.
+#ifdef USE_UPNP
+                SoftSetBoolArg("-upnp", false);
+#endif
+                SoftSetBoolArg("-listen",true);
+            }
+#endif
             if (net == NET_UNROUTABLE)
                 return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet.c_str()));
             nets.insert(net);
@@ -770,6 +807,19 @@ bool AppInit2(boost::thread_group& threadGroup)
     fDiscover = GetBoolArg("-discover", true);
     fNameLookup = GetBoolArg("-dns", true);
 
+#ifdef USE_NATIVE_I2P
+    // -i2p can override both tor and proxy
+    if (mapArgs.count(I2P_NET_NAME_PARAM) && mapArgs[I2P_NET_NAME_PARAM] == "1") {
+        // Disable on i2p per default
+        SoftSetBoolArg("-irc", false);
+#ifdef USE_UPNP
+        SoftSetBoolArg("-upnp", false);
+#endif
+        SoftSetBoolArg("-listen",true);
+        SetReachable(NET_NATIVE_I2P);
+    }
+#endif
+
     bool fBound = false;
     if (!fNoListen) {
         if (mapArgs.count("-bind")) {
@@ -783,6 +833,10 @@ bool AppInit2(boost::thread_group& threadGroup)
         else {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
+#ifdef USE_NATIVE_I2P
+            if (!IsLimited(NET_NATIVE_I2P))
+                fBound |= BindNativeI2P();
+#endif
 #ifdef USE_IPV6
             fBound |= Bind(CService(in6addr_any, GetListenPort()), BF_NONE);
 #endif

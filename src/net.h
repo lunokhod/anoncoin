@@ -45,6 +45,13 @@ void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
 void SocketSendData(CNode *pnode);
 
+#ifdef USE_NATIVE_I2P
+bool IsI2PEnabled();
+bool BindListenNativeI2P();
+bool BindListenNativeI2P(SOCKET& hSocket);
+extern int nI2PNodeCount;
+#endif
+
 enum
 {
     LOCAL_NONE,   // unknown
