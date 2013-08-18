@@ -1,3 +1,6 @@
+//
+// I2P-patch
+// Copyright (c) 2012-2013 giv
 #ifndef BITCOINGUI_H
 #define BITCOINGUI_H
 
@@ -83,6 +86,11 @@ private:
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
+#ifdef USE_NATIVE_I2P
+    QLabel* labelI2PConnections;
+    QLabel* labelI2POnly;
+    QLabel* labelI2PGenerated;
+#endif
     QProgressBar *progressBar;
 
     QMenuBar *appMenuBar;
@@ -130,6 +138,9 @@ private:
 public slots:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
+#ifdef USE_NATIVE_I2P
+    void setNumI2PConnections(int count);
+#endif
     /** Set number of blocks shown in the UI */
     void setNumBlocks(int count, int nTotalBlocks);
     /** Set the encryption status as shown in the UI.

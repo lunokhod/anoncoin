@@ -49,6 +49,7 @@ void SocketSendData(CNode *pnode);
 bool IsI2PEnabled();
 bool BindListenNativeI2P();
 bool BindListenNativeI2P(SOCKET& hSocket);
+bool IsI2POnly();
 extern int nI2PNodeCount;
 #endif
 

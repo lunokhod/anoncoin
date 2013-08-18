@@ -1,3 +1,6 @@
+//
+// I2P-patch
+// Copyright (c) 2012-2013 giv
 #include "optionsdialog.h"
 #include "ui_optionsdialog.h"
 
@@ -5,6 +8,10 @@
 #include "monitoreddatamapper.h"
 #include "netbase.h"
 #include "optionsmodel.h"
+
+#ifdef USE_NATIVE_I2P
+#include "clientmodel.h"
+#endif
 
 #include <QDir>
 #include <QIntValidator>
@@ -19,6 +26,10 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     fRestartWarningDisplayed_Proxy(false),
     fRestartWarningDisplayed_Lang(false),
     fProxyIpValid(true)
+#ifdef USE_NATIVE_I2P
+    , fRestartWarningDisplayed_I2P(false)
+    , tabI2P(new I2POptionsWidget())
+#endif
 {
     ui->setupUi(this);
 
@@ -92,6 +103,9 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     connect(mapper, SIGNAL(currentIndexChanged(int)), this, SLOT(disableApplyButton()));
     /* setup/change UI elements when proxy IP is invalid/valid */
     connect(this, SIGNAL(proxyIpValid(QValidatedLineEdit *, bool)), this, SLOT(handleProxyIpValid(QValidatedLineEdit *, bool)));
+#ifdef USE_NATIVE_I2P
+    ui->tabWidget->addTab(tabI2P, QString("I2P"));
+#endif
 }
 
 OptionsDialog::~OptionsDialog()
@@ -112,8 +126,11 @@ void OptionsDialog::setModel(OptionsModel *model)
         mapper->toFirst();
     }
 
-    /* update the display unit, to not use the default ("BTC") */
+    /* update the display unit, to not use the default ("ANC") */
     updateDisplayUnit();
+#ifdef USE_NATIVE_I2P
+    QObject::connect(tabI2P, SIGNAL(settingsChanged()), this, SLOT(showRestartWarning_I2P()));
+#endif
 
     /* warn only when language selection changes by user action (placed here so init via mapper doesn't trigger this) */
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning_Lang()));
@@ -121,6 +138,14 @@ void OptionsDialog::setModel(OptionsModel *model)
     /* disable apply button after settings are loaded as there is nothing to save */
     disableApplyButton();
 }
+
+#ifdef USE_NATIVE_I2P
+void OptionsDialog::setClientModel(ClientModel* clientModel) {
+    if (clientModel) {
+        tabI2P->setModel(clientModel);
+    }
+}
+#endif
 
 void OptionsDialog::setMapper()
 {
@@ -146,6 +171,9 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->displayAddresses, OptionsModel::DisplayAddresses);
+#ifdef USE_NATIVE_I2P
+    tabI2P->setMapper(*mapper);
+#endif
 }
 
 void OptionsDialog::enableApplyButton()
@@ -228,6 +256,15 @@ void OptionsDialog::showRestartWarning_Proxy()
         fRestartWarningDisplayed_Proxy = true;
     }
 }
+
+#ifdef USE_NATIVE_I2P
+void OptionsDialog::showRestartWarning_I2P() {
+    if(!fRestartWarningDisplayed_I2P) {
+        QMessageBox::warning(this, tr("Warning"), tr("This setting will take effect after restarting Anoncoin."), QMessageBox::Ok);
+        fRestartWarningDisplayed_I2P = true;
+    }
+}
+#endif
 
 void OptionsDialog::showRestartWarning_Lang()
 {

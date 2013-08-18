@@ -10,6 +10,10 @@
 //
 // client versioning
 //
+#ifdef USE_NATIVE_I2P
+#define I2P_NATIVE_BUILD "0.2"
+std::string FormatI2PNativeFullVersion();
+#endif
 
 static const int CLIENT_VERSION =
                            1000000 * CLIENT_VERSION_MAJOR

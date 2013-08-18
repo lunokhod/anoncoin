@@ -1,3 +1,6 @@
+//
+// I2P-patch
+// Copyright (c) 2012-2013 giv
 #ifndef CLIENTMODEL_H
 #define CLIENTMODEL_H
 
@@ -55,6 +58,20 @@ public:
     QString clientName() const;
     QString formatClientStartupTime() const;
 
+#ifdef USE_NATIVE_I2P
+    QString formatI2PNativeFullVersion() const;
+    int getNumI2PConnections() const;
+    QString getPublicI2PKey() const;
+    QString getPrivateI2PKey() const;
+    bool isI2PAddressGenerated() const;
+    bool isI2PEnabled() const;
+    bool isI2POnly() const;
+    QString getB32Address(const QString& destination) const;
+    void generateI2PDestination(QString& pub, QString& priv) const;
+//    I2PSession& getI2PSession() const;
+//    bool isPermanent
+#endif
+
 private:
     OptionsModel *optionsModel;
 
@@ -71,6 +88,9 @@ private:
     void unsubscribeFromCoreSignals();
 
 signals:
+#ifdef USE_NATIVE_I2P
+    void numI2PConnectionsChanged(int count);
+#endif
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count, int countOfPeers);
     void alertsChanged(const QString &warnings);
@@ -81,6 +101,9 @@ signals:
 public slots:
     void updateTimer();
     void updateNumConnections(int numConnections);
+#ifdef USE_NATIVE_I2P
+    void updateNumI2PConnections(int numI2PConnections);
+#endif
     void updateAlert(const QString &hash, int status);
 };
 

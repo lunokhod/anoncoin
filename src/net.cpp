@@ -9,6 +9,7 @@
 #include "addrman.h"
 #include "ui_interface.h"
 #include "script.h"
+#include "netbase.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -107,21 +108,26 @@ void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
 }
 
 #ifdef USE_NATIVE_I2P
-bool IsI2PEnabled() {
-    bool I2P=false;
+bool IsI2POnly() {
+    bool i2pOnly = false;
     if (mapArgs.count("-onlynet")) {
         std::set<enum Network> nets;
         BOOST_FOREACH(std::string snet, mapMultiArgs["-onlynet"]) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_NATIVE_I2P) {
-                I2P=true;
+                i2pOnly=true;
             }
         }
     }
-    if (mapArgs.count(I2P_NET_NAME_PARAM) && mapArgs[I2P_NET_NAME_PARAM] == "1") {
-        I2P=true;
+}
+bool IsI2PEnabled() {
+    if (IsI2POnly()) {
+         return true;
     }
-    return I2P;
+    if (mapArgs.count(I2P_NET_NAME_PARAM) && mapArgs[I2P_NET_NAME_PARAM] == "1") {
+        return true;
+    }
+    return false;
 }
 #endif
 
