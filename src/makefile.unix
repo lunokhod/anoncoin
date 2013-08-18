@@ -45,11 +45,11 @@ LIBS += \
    -l db_cxx$(BDB_LIB_SUFFIX) \
    -l ssl \
    -l crypto \
- -l i2psam
+   -l i2psam
 
 TESTLIBS += \
  -Wl,-B$(LMODE) \
-   -l boost_unit_test_framework$(BOOST_LIB_SUFFIX)
+ -l boost_unit_test_framework$(BOOST_LIB_SUFFIX)
 
 ifndef USE_UPNP
 	override USE_UPNP = -
@@ -151,7 +151,7 @@ OBJS= \
     obj/i2p.o
 
 
-all: anoncoind
+all: i2psam anoncoind
 
 test check: test_anoncoin FORCE
 	./test_anoncoin
@@ -184,6 +184,9 @@ obj/%.o: %.cpp
 
 anoncoind: $(OBJS:obj/%=obj/%)
 	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
+
+i2psam:
+	$(MAKE) -C ../i2psam -f makefile.unix
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 

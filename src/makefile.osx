@@ -13,16 +13,18 @@ INCLUDEPATHS= \
  -I"$(CURDIR)" \
  -I"$(CURDIR)"/obj \
  -I"$(DEPSDIR)/include" \
- -I"$(DEPSDIR)/include/db48"
+ -I"$(DEPSDIR)/include/db48" \
+ -I"../i2psam"
 
 LIBPATHS= \
  -L"$(DEPSDIR)/lib" \
- -L"$(DEPSDIR)/lib/db48"
+ -L"$(DEPSDIR)/lib/db48" \
+ -L"../i2psam"
 
 USE_UPNP:=1
 USE_IPV6:=1
 
-LIBS= -dead_strip
+LIBS= -dead_strip -li2psam
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
@@ -56,13 +58,13 @@ LIBS += \
 TESTDEFS += -DBOOST_TEST_DYN_LINK
 endif
 
-DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DBOOST_SPIRIT_THREADSAFE
+DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DBOOST_SPIRIT_THREADSAFE -DUSE_NATIVE_I2P
 
 ifdef RELEASE
 # Compile for maximum compatibility and smallest size.
 # This requires that dependencies are compiled
 # the same way.
-CFLAGS = -mmacosx-version-min=10.5 -arch i386 -O3
+CFLAGS = -mmacosx-version-min=10.5 -O3
 else
 DEBUGFLAGS = -g
 endif
@@ -122,7 +124,7 @@ ifneq (${USE_IPV6}, -)
 	DEFS += -DUSE_IPV6=$(USE_IPV6)
 endif
 
-all: anoncoind
+all: i2psam anoncoind
 
 test check: test_anoncoin FORCE
 	./test_anoncoin
@@ -159,6 +161,9 @@ obj/%.o: %.cpp
 
 anoncoind: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+
+i2psam:
+	$(MAKE) -C ../i2psam -f makefile.unix
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
