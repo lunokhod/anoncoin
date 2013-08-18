@@ -45,6 +45,7 @@ namespace Checkpoints
         (40000,  uint256("0xcc045b52fe3519281627961949001040110a0e81429170e3f071450529b03eba"))
         (50000,  uint256("0x9d67c13afc8c46305395cfe08add094040e8e298349365b40b68c22bf49419a0"))
         (60000,  uint256("0x513056fb0206439021a58ce9d007a63fdca6c256cab340966359bef094d826d9"))
+        (70000, uint256("0x262e04e7185b07522704ac712dc01adb70e3d287ba2eb1b657a16e9118f5f93b"))
         ;
     static const CCheckpointData data = {
         &mapCheckpoints,
