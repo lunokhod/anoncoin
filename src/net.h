@@ -115,6 +115,7 @@ public:
     int nMisbehavior;
     uint64 nSendBytes;
     uint64 nRecvBytes;
+    uint64 nBlocksRequested;
     bool fSyncNode;
 };
 
@@ -184,6 +185,7 @@ public:
     int64 nLastRecv;
     int64 nLastSendEmpty;
     int64 nTimeConnected;
+    uint64 nBlocksRequested;
     CAddress addr;
     std::string addrName;
     CService addrLocal;
@@ -249,6 +251,7 @@ public:
         nRecvBytes = 0;
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
+        nBlocksRequested = 0;
         addr = addrIn;
         addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
         nVersion = 0;
