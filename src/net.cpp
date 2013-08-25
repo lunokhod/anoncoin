@@ -109,16 +109,16 @@ void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
 
 #ifdef USE_NATIVE_I2P
 bool IsI2POnly() {
-    bool i2pOnly = false;
     if (mapArgs.count("-onlynet")) {
         std::set<enum Network> nets;
         BOOST_FOREACH(std::string snet, mapMultiArgs["-onlynet"]) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_NATIVE_I2P) {
-                i2pOnly=true;
+                return true;
             }
         }
     }
+    return false;
 }
 bool IsI2PEnabled() {
     if (IsI2POnly()) {
