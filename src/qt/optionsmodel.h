@@ -32,6 +32,9 @@ public:
         DisplayUnit,       // BitcoinUnits::Unit
         DisplayAddresses,  // bool
         Language,          // QString
+#ifdef USE_COINCONTROL
+        CoinControlFeatures, // bool
+#endif
 #ifdef USE_NATIVE_I2P
         I2PUseI2POnly,              // bool
         I2PSAMHost,                 // QString
@@ -73,6 +76,9 @@ public:
     int getDisplayUnit() { return nDisplayUnit; }
     bool getDisplayAddresses() { return bDisplayAddresses; }
     QString getLanguage() { return language; }
+#ifdef USE_COINCONTROL
+    bool getCoinControlFeatures();
+#endif
 
 private:
     int nDisplayUnit;
@@ -80,6 +86,9 @@ private:
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     QString language;
+#ifdef USE_COINCONTROL
+    bool fCoinControlFeatures; 
+#endif
 #ifdef USE_NATIVE_I2P
     int i2pInboundQuantity;
     int i2pInboundLength;
@@ -99,6 +108,10 @@ private:
 
 signals:
     void displayUnitChanged(int unit);
+#ifdef USE_COINCONTROL
+    void transactionFeeChanged(qint64); 
+    void coinControlFeaturesChanged(bool); 
+#endif
 };
 
 #endif // OPTIONSMODEL_H

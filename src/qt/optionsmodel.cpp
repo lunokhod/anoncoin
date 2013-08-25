@@ -121,6 +121,9 @@ void OptionsModel::Init()
     fMinimizeOnClose = settings.value("fMinimizeOnClose", false).toBool();
     nTransactionFee = settings.value("nTransactionFee").toLongLong();
     language = settings.value("language", "").toString();
+#ifdef USE_COINCONTROL
+    fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool(); 
+#endif
 
     // These are shared with core Bitcoin; we want
     // command-line options to override the GUI settings:
@@ -323,6 +326,10 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(bDisplayAddresses);
         case Language:
             return settings.value("language", "");
+#ifdef USE_COINCONTROL
+        case CoinControlFeatures: 
+            return QVariant(fCoinControlFeatures); 
+#endif
 #ifdef USE_NATIVE_I2P
         case I2PUseI2POnly:
         {
@@ -446,6 +453,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case Fee:
             nTransactionFee = value.toLongLong();
             settings.setValue("nTransactionFee", nTransactionFee);
+#ifdef USE_COINCONTROL
+            emit transactionFeeChanged(nTransactionFee);
+#endif
             break;
         case DisplayUnit:
             nDisplayUnit = value.toInt();
@@ -459,6 +469,14 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case Language:
             settings.setValue("language", value);
             break;
+#ifdef USE_COINCONTROL
+        case CoinControlFeatures: {
+            fCoinControlFeatures = value.toBool(); 
+            settings.setValue("fCoinControlFeatures", fCoinControlFeatures); 
+            emit coinControlFeaturesChanged(fCoinControlFeatures); 
+        }
+        break;
+#endif
 #ifdef USE_NATIVE_I2P
         case I2PUseI2POnly:
         {
@@ -589,3 +607,10 @@ qint64 OptionsModel::getTransactionFee()
 {
     return nTransactionFee;
 }
+
+#ifdef USE_COINCONTROL
+bool OptionsModel::getCoinControlFeatures()
+{
+    return fCoinControlFeatures; 
+}
+#endif

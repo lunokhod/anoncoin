@@ -186,7 +186,12 @@ bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned in
 bool AbortNode(const std::string &msg);
 
 
-
+inline bool AllowFree(double dPriority)
+{
+    // Large (in bytes) low-priority (new, small-coin) transactions
+    // need a fee.
+    return dPriority > COIN * 144 / 250;
+}
 
 
 
@@ -440,6 +445,9 @@ public:
     }
 
     bool IsDust() const;
+#ifdef USE_COINCONTROL
+    bool IsDust(int64&) const;
+#endif
 
     std::string ToString() const
     {
@@ -619,7 +627,11 @@ public:
         return dPriority > COIN * 420 / 250; // Anoncoin: 420 blocks found a day. Priority cutoff is 1 anoncoin day / 250 bytes.
     }
 
+#ifdef USE_COINCONTROL
+    int64 GetMinFee(unsigned int nBlockSize=1, unsigned int nBytes = 0, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const;
+#else
     int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const;
+#endif
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {

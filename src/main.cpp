@@ -362,10 +362,19 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
 
 bool CTxOut::IsDust() const
 {
-    // Litecoin: IsDust() detection disabled, allows any valid dust to be relayed.
+    // Anoncoin: IsDust() detection disabled, allows any valid dust to be relayed.
     // The fees imposed on each dust txo is considered sufficient spam deterrant. 
     return false;
 }
+
+#ifdef USE_COINCONTROL
+bool CTxOut::IsDust(int64&) const
+{
+    // Anoncoin: IsDust() detection disabled, allows any valid dust to be relayed.
+    // The fees imposed on each dust txo is considered sufficient spam deterrant. 
+    return false;
+}
+#endif
 
 bool CTransaction::IsStandard(string& strReason) const
 {
@@ -597,13 +606,20 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
     return true;
 }
 
+#ifdef USE_COINCONTROL
+int64 CTransaction::GetMinFee(unsigned int nBlockSize, unsigned int nBytes, bool fAllowFree,
+                              enum GetMinFee_mode mode) const
+#else
 int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
                               enum GetMinFee_mode mode) const
+#endif
 {
     // Base fee is either nMinTxFee or nMinRelayTxFee
     int64 nBaseFee = (mode == GMF_RELAY) ? nMinRelayTxFee : nMinTxFee;
 
+#ifndef USE_COINCONTROL
     unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
+#endif
     unsigned int nNewBlockSize = nBlockSize + nBytes;
     int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
@@ -763,7 +779,11 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
+#ifdef USE_COINCONTROL
+        int64 txMinFee = tx.GetMinFee(1000, nSize, true, GMF_RELAY);
+#else
         int64 txMinFee = tx.GetMinFee(1000, true, GMF_RELAY);
+#endif
         if (fLimitFree && nFees < txMinFee)
             return error("CTxMemPool::accept() : not enough fees %s, %"PRI64d" < %"PRI64d,
                          hash.ToString().c_str(),

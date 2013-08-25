@@ -40,6 +40,9 @@ public slots:
 
 signals:
     void removeEntry(SendCoinsEntry *entry);
+#ifdef USE_COINCONTROL
+    void payAmountChanged();
+#endif
 
 private slots:
     void on_deleteButton_clicked();

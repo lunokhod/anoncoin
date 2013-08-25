@@ -171,6 +171,9 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->displayAddresses, OptionsModel::DisplayAddresses);
+#ifdef USE_COINCONTROL
+    mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
+#endif
 #ifdef USE_NATIVE_I2P
     tabI2P->setMapper(*mapper);
 #endif

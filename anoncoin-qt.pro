@@ -309,9 +309,22 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/i2poptionswidget.ui
 
 contains(USE_QRCODE, 1) {
-HEADERS += src/qt/qrcodedialog.h
-SOURCES += src/qt/qrcodedialog.cpp
-FORMS += src/qt/forms/qrcodedialog.ui
+    HEADERS += src/qt/qrcodedialog.h
+    SOURCES += src/qt/qrcodedialog.cpp
+    FORMS += src/qt/forms/qrcodedialog.ui
+}
+
+contains(USE_COINCONTROL, 0) {
+    message(Disabling coin control)
+} else {
+    message(Building with coincontrol support)
+    HEADERS += src/qt/coincontroldialog.h \
+        src/qt/coincontroltreewidget.h \
+        src/coincontrol.h
+    SOURCES += src/qt/coincontroldialog.cpp \
+        src/qt/coincontroltreewidget.cpp
+    FORMS += src/qt/forms/coincontroldialog.ui
+    DEFINES += USE_COINCONTROL
 }
 
 contains(BITCOIN_QT_TEST, 1) {

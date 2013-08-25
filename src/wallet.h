@@ -22,6 +22,9 @@ class CAccountingEntry;
 class CWalletTx;
 class CReserveKey;
 class COutput;
+#ifdef USE_COINCONTROL
+class CCoinControl;
+#endif
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
@@ -68,7 +71,11 @@ public:
 class CWallet : public CCryptoKeyStore
 {
 private:
+#ifdef USE_COINCONTROL
+    bool SelectCoins(int64 nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet, const CCoinControl *coinControl=NULL) const; 
+#else
     bool SelectCoins(int64 nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
+#endif
 
     CWalletDB *pwalletdbEncryption;
 
@@ -124,7 +131,11 @@ public:
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
 
+#ifdef USE_COINCONTROL
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl=NULL) const; 
+#else
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true) const;
+#endif
     bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
     void LockCoin(COutPoint& output);
@@ -178,10 +189,18 @@ public:
     int64 GetBalance() const;
     int64 GetUnconfirmedBalance() const;
     int64 GetImmatureBalance() const;
-    bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend,
+    bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, 
+#ifdef USE_COINCONTROL
+                           CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl=NULL); 
+#else
                            CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason);
+#endif
     bool CreateTransaction(CScript scriptPubKey, int64 nValue,
+#ifdef USE_COINCONTROL
+                           CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl=NULL); 
+#else
                            CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason);
+#endif
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string SendMoneyToDestination(const CTxDestination &address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
