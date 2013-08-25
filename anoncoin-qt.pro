@@ -428,7 +428,7 @@ win32:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
 macx:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
 
 # use: qmake "USE_BOOST_46=1"
-CONFIG(USE_BOOST_46) {
+contains(USE_BOOST_46,1) {
     message(Building with boost 1.4.6. Excluding chrono library.)
 } else {
     message(Building with boost over 1.4.6. Including chrono library.)
