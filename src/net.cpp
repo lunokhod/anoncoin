@@ -32,7 +32,7 @@
 using namespace std;
 using namespace boost;
 
-static const int MAX_OUTBOUND_CONNECTIONS = 8;
+static const int MAX_OUTBOUND_CONNECTIONS = 24;
 
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
 
@@ -380,6 +380,9 @@ bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const cha
 
 bool GetMyExternalIP(CNetAddr& ipRet)
 {
+    if (IsI2POnly())
+        return false;
+
     CService addrConnect;
     const char* pszGet;
     const char* pszKeyword;
@@ -859,8 +862,9 @@ void ThreadSocketHandler()
                         pnode->Release();
                     vNodesDisconnected.push_back(pnode);
 #ifdef USE_NATIVE_I2P
-                    if (pnode->addr.IsNativeI2P())
-                        --nI2PNodeCount;
+                    if (IsI2PEnabled())
+                        if (pnode->addr.IsNativeI2P())
+                            --nI2PNodeCount;
 #endif
                 }
             }
@@ -1390,24 +1394,26 @@ void ThreadDNSAddressSeed()
             return;
         }
 #endif
-    for (unsigned int seed_idx = 0; strDNSSeed[seed_idx][0] != NULL; seed_idx++) {
-        if (HaveNameProxy()) {
-            AddOneShot(strDNSSeed[seed_idx][1]);
-        } else {
-            vector<CNetAddr> vaddr;
-            vector<CAddress> vAdd;
-            if (LookupHost(strDNSSeed[seed_idx][1], vaddr))
-            {
-                BOOST_FOREACH(CNetAddr& ip, vaddr)
+    if (!IsI2POnly()) {
+        for (unsigned int seed_idx = 0; strDNSSeed[seed_idx][0] != NULL; seed_idx++) {
+            if (HaveNameProxy()) {
+                AddOneShot(strDNSSeed[seed_idx][1]);
+            } else {
+                vector<CNetAddr> vaddr;
+                vector<CAddress> vAdd;
+                if (LookupHost(strDNSSeed[seed_idx][1], vaddr))
                 {
-                    int nOneDay = 24*3600;
-                    CAddress addr = CAddress(CService(ip, GetDefaultPort()));
-                    addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
-                    vAdd.push_back(addr);
-                    found++;
+                    BOOST_FOREACH(CNetAddr& ip, vaddr)
+                    {
+                        int nOneDay = 24*3600;
+                        CAddress addr = CAddress(CService(ip, GetDefaultPort()));
+                        addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
+                        vAdd.push_back(addr);
+                        found++;
+                    }
                 }
+                addrman.Add(vAdd, CNetAddr(strDNSSeed[seed_idx][0], true));
             }
-            addrman.Add(vAdd, CNetAddr(strDNSSeed[seed_idx][0], true));
         }
     }
 
@@ -1500,6 +1506,8 @@ void ThreadOpenConnections()
             std::vector<CAddress> vAdd;
             for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
             {
+                if (IsI2POnly())
+                    break;
                 // It'll only connect to one or two seed nodes because once it connects,
                 // it'll get a pile of addresses with newer timestamps.
                 // Seed nodes are given a random 'last seen time' of between one and two
