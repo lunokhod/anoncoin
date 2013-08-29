@@ -14,6 +14,11 @@
 // Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE  true
 
+#define ANONCOIN_VERSION_MAJOR 0
+#define ANONCOIN_VERSION_MINOR 2
+#define ANONCOIN_VERSION_REVISON 0
+#define ANONCOIN_VERSION_BUILD 0
+
 // Copyright year (2009-this)
 // Todo: update this when changing our copyright comments in the source
 #define COPYRIGHT_YEAR 2013
