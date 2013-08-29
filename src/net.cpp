@@ -543,8 +543,9 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
             LOCK(cs_vNodes);
             vNodes.push_back(pnode);
 #ifdef USE_NATIVE_I2P
-            if (addrConnect.IsNativeI2P())
-                ++nI2PNodeCount;
+            if (IsI2PEnabled())
+                if (addrConnect.IsNativeI2P())
+                    ++nI2PNodeCount;
 #endif
         }
 
