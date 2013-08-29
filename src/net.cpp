@@ -1362,8 +1362,7 @@ static const char *strI2PDNSSeed[][2] = {
 #endif
 
 static const char *strTestNetDNSSeed[][2] = {
-    {"anoncoin.net", "testnet-seed.anoncoin.net"},
-    {NULL, NULL}
+    {"anoncoin.net", "testnet-seed.anoncoin.net"}
 };
 
 void ThreadDNSAddressSeed()
@@ -1392,7 +1391,7 @@ void ThreadDNSAddressSeed()
         // Prefer I2P, if 4 is found, drop the clearnet dnsseed
         if (found>4)
             return;
-        }
+    }
 #endif
     if (!IsI2POnly()) {
         for (unsigned int seed_idx = 0; strDNSSeed[seed_idx][0] != NULL; seed_idx++) {

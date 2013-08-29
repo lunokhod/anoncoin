@@ -1,11 +1,12 @@
 ---
 name: "boost"
 suites:
-- "lucid"
+- "precise"
 architectures:
 - "i386"
 packages: 
-- "mingw32"
+- "g++-mingw-w64"
+- "mingw-w64"
 - "faketime"
 - "zip"
 reference_datetime: "2011-01-30 00:00:00"
@@ -17,10 +18,10 @@ script: |
   mkdir -p $TMPDIR/bin/$GBUILD_BITS $TMPDIR/include
   tar xjf boost_1_50_0.tar.bz2
   cd boost_1_50_0
-  echo "using gcc : 4.4 : i586-mingw32msvc-g++
+  echo "using gcc : 4.4 : i686-w64-mingw32-g++
         :
-        <rc>i586-mingw32msvc-windres
-        <archiver>i586-mingw32msvc-ar
+        <rc>i686-w64-mingw32-windres
+        <archiver>i686-w64-mingw32-ar
         <cxxflags>-frandom-seed=boost1
   ;" > user-config.jam
   ./bootstrap.sh --without-icu
