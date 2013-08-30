@@ -3313,6 +3313,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->PushMessage("verack");
         pfrom->ssSend.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
 
+#ifdef USE_NATIVE_I2P
+        if (pfrom->nServices & NODE_I2P)
+// pfrom->ssSend.SetType(pfrom->ssSend.GetType() & ~SER_IPADDRONLY);
+            pfrom->SetSendStreamType(pfrom->GetSendStreamType() & ~SER_IPADDRONLY);
+        else
+// pfrom->ssSend.SetType(pfrom->ssSend.GetType() & SER_IPADDRONLY);
+            pfrom->SetSendStreamType(pfrom->GetSendStreamType() & SER_IPADDRONLY);
+#endif
+
         if (!pfrom->fInbound)
         {
             // Advertise our address
@@ -3364,6 +3373,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     else if (strCommand == "verack")
     {
         pfrom->SetRecvVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
+#ifdef USE_NATIVE_I2P
+        if (pfrom->nServices & NODE_I2P)
+// pfrom->vRecv.SetType(pfrom->vRecv.GetType() & ~SER_IPADDRONLY);
+            pfrom->SetRecvStreamType(pfrom->GetRecvStreamType() & ~SER_IPADDRONLY);
+        else
+// pfrom->vRecv.SetType(pfrom->vRecv.GetType() & SER_IPADDRONLY);
+            pfrom->SetRecvStreamType(pfrom->GetRecvStreamType() & SER_IPADDRONLY);
+#endif
     }
 
 

@@ -109,16 +109,15 @@ void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
 
 #ifdef USE_NATIVE_I2P
 bool IsI2POnly() {
-    if (mapArgs.count("-onlynet")) {
-        std::set<enum Network> nets;
-        BOOST_FOREACH(std::string snet, mapMultiArgs["-onlynet"]) {
-            enum Network net = ParseNetwork(snet);
-            if (net == NET_NATIVE_I2P) {
-                return true;
-            }
-        }
+    bool i2pOnly = NET_MAX > 0; // if NET_MAX == 0 we set i2pOnly to false and exit
+    for (int n = 0; n < NET_MAX; n++)
+    {
+        Network net = (Network)n;
+        if (net == NET_UNROUTABLE)
+            continue;
+        i2pOnly &= ((net == NET_NATIVE_I2P) != IsLimited(net)); // isI2P xor IsLimited
     }
-    return false;
+    return i2pOnly;
 }
 bool IsI2PEnabled() {
     if (IsI2POnly()) {
@@ -711,7 +710,11 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         // get current incomplete message, or create a new one
         if (vRecvMsg.empty() ||
             vRecvMsg.back().complete())
+#ifdef USE_NATIVE_I2P
+            vRecvMsg.push_back(CNetMessage(nRecvStreamType, nRecvVersion));
+#else
             vRecvMsg.push_back(CNetMessage(SER_NETWORK, nRecvVersion));
+#endif
 
         CNetMessage& msg = vRecvMsg.back();
 
@@ -2069,6 +2072,13 @@ public:
         semOutbound = NULL;
         delete pnodeLocalHost;
         pnodeLocalHost = NULL;
+
+#ifdef USE_NATIVE_I2P
+        BOOST_FOREACH(SOCKET& hI2PListenSocket, vhI2PListenSocket)
+            if (hI2PListenSocket != INVALID_SOCKET)
+                if (closesocket(hI2PListenSocket) == SOCKET_ERROR)
+                    printf("closesocket(hI2PListenSocket) failed with error %d\n", WSAGetLastError());
+#endif
 
 #ifdef WIN32
         // Shutdown Windows Sockets
