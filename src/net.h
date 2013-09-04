@@ -234,6 +234,9 @@ public:
       , nRecvStreamType(SER_NETWORK | (((addrIn.nServices & NODE_I2P) || addrIn.IsNativeI2P()) ? 0 : SER_IPADDRONLY))
 #endif
     {
+#ifdef USE_NATIVE_I2P
+        ssSend.SetType(nSendStreamType);
+#endif
         nServices = 0;
         hSocket = hSocketIn;
         nRecvVersion = MIN_PROTO_VERSION;
