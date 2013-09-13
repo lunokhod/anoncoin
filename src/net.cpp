@@ -1591,8 +1591,8 @@ void ThreadOpenConnections()
 #ifdef USE_NATIVE_I2P
             if (IsI2PEnabled())
                 if (!addr.IsNativeI2P() && addr.GetPort() != GetDefaultPort() && nTries < 20)
-                    if (addr.GetPort() == 0 && !addr.IsNativeI2P()) {
-                        printf("Port is 0, overriding");
+                    if (addr.GetPort() == 0 && !addr.IsNativeI2P() && !addr.IsTor()) {
+                        printf("Port is 0, overriding\n");
                         addr.SetPort(GetDefaultPort());
                     } else {
                         continue;
@@ -1604,9 +1604,9 @@ void ThreadOpenConnections()
 #endif
 #ifdef USE_NATIVE_I2P
             else
-                if (addr.GetPort() == 0 && !addr.IsNativeI2P())
-                    printf("Port is 0, overriding");
-                    addr.SetPort(9377);
+                if (addr.GetPort() == 0 && !addr.IsNativeI2P() && !addr.IsTor())
+                    printf("Port is 0, overriding\n");
+                    addr.SetPort(GetDefaultPort());
 #endif
 
             addrConnect = addr;
