@@ -525,8 +525,10 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 #endif
 
+#ifdef USE_IRC
     // Keep irc on per default
     SoftSetBoolArg("-irc", true);
+#endif
 
     fTestNet = GetBoolArg("-testnet");
     fBloomFilters = GetBoolArg("-bloomfilters");
@@ -753,8 +755,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 #ifdef USE_NATIVE_I2P
             if (net == NET_NATIVE_I2P) {
                 // Disable upnp and listening on I2P only.
-#ifdef USE_UPNP
+#ifdef USE_IRC
                 SoftSetBoolArg("-irc", false);
+#endif
+#ifdef USE_UPNP
                 SoftSetBoolArg("-upnp", false);
 #endif
                 SoftSetBoolArg("-listen",true);
@@ -818,7 +822,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     // -i2p can override both tor and proxy
     if (mapArgs.count(I2P_NET_NAME_PARAM) && mapArgs[I2P_NET_NAME_PARAM] == "1") {
         // Disable on i2p per default
+#ifdef USE_IRC
         SoftSetBoolArg("-irc", false);
+#endif
 #ifdef USE_UPNP
         SoftSetBoolArg("-upnp", false);
 #endif
