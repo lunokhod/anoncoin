@@ -58,7 +58,7 @@ LIBS += \
 TESTDEFS += -DBOOST_TEST_DYN_LINK
 endif
 
-DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DBOOST_SPIRIT_THREADSAFE -DUSE_NATIVE_I2P
+DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DBOOST_SPIRIT_THREADSAFE -DUSE_NATIVE_I2P -DUSE_IRC
 
 ifdef RELEASE
 # Compile for maximum compatibility and smallest size.
@@ -106,7 +106,8 @@ OBJS= \
     obj/noui.o \
     obj/leveldb.o \
     obj/txdb.o \
-    obj/i2p.o
+    obj/i2p.o \
+    obj/irc.o
 
 ifndef USE_UPNP
 	override USE_UPNP = -

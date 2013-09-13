@@ -3,6 +3,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifdef USE_IRC
+#include "irc.h"
+#endif
 #include "db.h"
 #include "net.h"
 #include "init.h"
@@ -542,6 +545,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
             LOCK(cs_vNodes);
             vNodes.push_back(pnode);
 #ifdef USE_NATIVE_I2P
+            // TODO: check if pnode is an i2p node
             if (IsI2PEnabled())
                 if (addrConnect.IsNativeI2P())
                     ++nI2PNodeCount;
@@ -1587,11 +1591,23 @@ void ThreadOpenConnections()
 #ifdef USE_NATIVE_I2P
             if (IsI2PEnabled())
                 if (!addr.IsNativeI2P() && addr.GetPort() != GetDefaultPort() && nTries < 20)
+                    if (addr.GetPort() == 0 && !addr.IsNativeI2P()) {
+                        printf("Port is 0, overriding");
+                        addr.SetPort(GetDefaultPort());
+                    } else {
+                        continue;
+                    }
 #else
             // do not allow non-default ports, unless after 50 invalid addresses selected already
             if (addr.GetPort() != GetDefaultPort() && nTries < 50)
-#endif
                 continue;
+#endif
+#ifdef USE_NATIVE_I2P
+            else
+                if (addr.GetPort() == 0 && !addr.IsNativeI2P())
+                    printf("Port is 0, overriding");
+                    addr.SetPort(9377);
+#endif
 
             addrConnect = addr;
             break;
@@ -2001,6 +2017,21 @@ void StartNode(boost::thread_group& threadGroup)
         printf("DNS seeding disabled\n");
     else
         threadGroup.create_thread(boost::bind(&TraceThread<boost::function<void()> >, "dnsseed", &ThreadDNSAddressSeed));
+
+#ifdef USE_NATIVE_I2P
+    if (IsI2PEnabled()) {
+        printf("ThreadIRCSeed is disabled on I2P.\n");
+    } else if (IsI2POnly()) {
+        printf("ThreadIRCSeed is disabled on I2P.\n");
+    } else {
+        if (GetBoolArg("-irc", true))
+            threadGroup.create_thread(boost::bind(&TraceThread<boost::function<void()> >, "ircseed", &ThreadIRCSeed));
+    }
+#else
+    if (GetBoolArg("-irc", true))
+        threadGroup.create_thread(boost::bind(&TraceThread<boost::function<void()> >, "ircseed", &ThreadIRCSeed));
+#endif
+
 
 #ifdef USE_UPNP
     // Map ports with UPnP
