@@ -218,7 +218,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/showi2paddresses.h \
     src/i2p.h \
     src/hash.h \
-    src/qt/i2poptionswidget.h
+    src/qt/i2poptionswidget.h \
+    src/irc.h \
+    src/strlcpy.h
 
 SOURCES += src/qt/bitcoin.cpp \
     src/qt/bitcoingui.cpp \
@@ -290,7 +292,8 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/splashscreen.cpp \
     src/qt/showi2paddresses.cpp \
     src/qt/i2poptionswidget.cpp \
-    src/i2p.cpp
+    src/i2p.cpp \
+    src/irc.cpp
 
 RESOURCES += src/qt/bitcoin.qrc
 
@@ -325,6 +328,12 @@ contains(USE_COINCONTROL, 0) {
         src/qt/coincontroltreewidget.cpp
     FORMS += src/qt/forms/coincontroldialog.ui
     DEFINES += USE_COINCONTROL
+}
+
+contains(USE_ZEROCOIN, 1) {
+    message(No..)
+    message(Do not even think about touching it.)
+    message(This is _not_ production code.)
 }
 
 contains(BITCOIN_QT_TEST, 1) {

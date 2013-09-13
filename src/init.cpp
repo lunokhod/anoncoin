@@ -326,6 +326,9 @@ std::string HelpMessage()
         "  -listen                " + _("Accept connections from outside (default: 1 if no -proxy or -connect)") + "\n" +
         "  -bind=<addr>           " + _("Bind to given address and always listen on it. Use [host]:port notation for IPv6") + "\n" +
         "  -dnsseed               " + _("Find peers using DNS lookup (default: 1 unless -connect)") + "\n" +
+#ifdef USE_IRC
+        "  -irc                   " + _("Find peers using internet relay chat (default: 0)") + "\n" +
+#endif
         "  -banscore=<n>          " + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n" +
         "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n" +
         "  -maxreceivebuffer=<n>  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 5000)") + "\n" +
@@ -521,6 +524,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         return false;
     }
 #endif
+
+    // Keep irc on per default
+    SoftSetBoolArg("-irc", true);
 
     fTestNet = GetBoolArg("-testnet");
     fBloomFilters = GetBoolArg("-bloomfilters");
@@ -748,6 +754,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             if (net == NET_NATIVE_I2P) {
                 // Disable upnp and listening on I2P only.
 #ifdef USE_UPNP
+                SoftSetBoolArg("-irc", false);
                 SoftSetBoolArg("-upnp", false);
 #endif
                 SoftSetBoolArg("-listen",true);

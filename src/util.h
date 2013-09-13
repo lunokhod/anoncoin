@@ -103,6 +103,13 @@ T* alignup(T* p)
 #define MAX_PATH            1024
 #endif
 
+inline void Sleep(int64 n)
+{
+    /*Boost has a year 2038 problem— if the request sleep time is past epoch+2^31 seconds the sleep returns instantly.
+      So we clamp our sleeps here to 10 years and hope that boost is fixed by 2028.*/
+    boost::thread::sleep(boost::get_system_time() + boost::posix_time::milliseconds(n>315576000000LL?315576000000LL:n));
+}
+
 inline void MilliSleep(int64 n)
 {
 // Boost's sleep_for was uninterruptable when backed by nanosleep from 1.50
@@ -557,7 +564,7 @@ inline uint32_t ByteReverse(uint32_t value)
 //    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
 template <typename Callable> void LoopForever(const char* name,  Callable func, int64 msecs)
 {
-    std::string s = strprintf("bitcoin-%s", name);
+    std::string s = strprintf("anoncoin-%s", name);
     RenameThread(s.c_str());
     printf("%s thread start\n", name);
     try
@@ -583,7 +590,7 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
 // .. and a wrapper that just calls func once
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("bitcoin-%s", name);
+    std::string s = strprintf("anoncoin-%s", name);
     RenameThread(s.c_str());
     try
     {
