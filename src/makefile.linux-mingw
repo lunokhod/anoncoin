@@ -96,7 +96,8 @@ OBJS= \
     obj/bloom.o \
     obj/leveldb.o \
     obj/txdb.o \
-    obj/i2p.o
+    obj/i2p.o \
+    obj/irc.o
 
 all: i2psam anoncoind.exe
 

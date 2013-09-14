@@ -148,7 +148,9 @@ OBJS= \
     obj/noui.o \
     obj/leveldb.o \
     obj/txdb.o \
-    obj/i2p.o
+    obj/i2p.o \
+    obj/irc.o \
+    obj/irc.o
 
 
 all: i2psam anoncoind
