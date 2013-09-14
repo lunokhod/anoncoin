@@ -64,6 +64,8 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
+static const int64 MIN_TX_FEE = CENT;
+static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
 
 extern CScript COINBASE_FLAGS;
 
@@ -1651,6 +1653,8 @@ public:
     // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     uint256 nChainWork;
 
+    int64 nMoneySupply; // Anoncoin: Money supply
+
     // Number of transactions in this block.
     // Note: in a potential headers-first mode, this number cannot be relied upon
     unsigned int nTx;
@@ -1700,6 +1704,7 @@ public:
         nDataPos = 0;
         nUndoPos = 0;
         nChainWork = 0;
+        nMoneySupply = 0;
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
@@ -1856,6 +1861,7 @@ public:
         if (!(nType & SER_GETHASH))
             READWRITE(VARINT(nVersion));
 
+        READWRITE(VARINT(nMoneySupply));
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
         READWRITE(VARINT(nTx));
