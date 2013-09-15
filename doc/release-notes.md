@@ -25,10 +25,9 @@ corruption issues have experienced on OSX.
 
 Add height parameter to getnetworkhashps.
 
-Fix Norwegian and Swedish translations.
+Add money supply information to RPC
 
 Minor efficiency improvement in block peer request handling.
-
 
 0.8.3.7 changes
 ===============
