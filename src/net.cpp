@@ -1396,7 +1396,7 @@ void ThreadDNSAddressSeed()
             vAdd.push_back(addr);
             found++;
         }
-        addrman.Add(vAdd, CNetAddr(strI2PSeed[0], true));
+        addrman.Add(vAdd, CNetAddr(strI2PSeed[0]));
 
         // Prefer I2P, if 4 is found, drop the clearnet dnsseed
         if (found>4)
@@ -1404,20 +1404,19 @@ void ThreadDNSAddressSeed()
     }
 #endif
     if (!IsI2POnly()) {
-        for (unsigned int seed_idx = 0; strDNSSeed[seed_idx][0] != NULL; seed_idx++) {
-            if (HaveNameProxy()) {
-                AddOneShot(strDNSSeed[seed_idx][1]);
-            } else {
-                vector<CAddress> vAdd;
-                for (size_t i = 0; i < ARRAYLEN(strI2PSeed); i++) {
-                    int nOneDay = 24*3600;
-                    CAddress addr(CService((const std::string&)strI2PSeed[i]));
-                    addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
-                    vAdd.push_back(addr);
+        unsigned int seed_idx = 0;
+        if (HaveNameProxy()) {
+            AddOneShot(strDNSSeed[seed_idx][1]);
+        } else {
+            vector<CAddress> vAdd;
+            for (size_t i = 0; i < ARRAYLEN(strI2PSeed); i++) {
+                int nOneDay = 24*3600;
+                CAddress addr(CService((const std::string&)strI2PSeed[i]));
+                addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
+                vAdd.push_back(addr);
                 found++;
-                }
-                addrman.Add(vAdd, CNetAddr(strI2PSeed[0], true));
             }
+            addrman.Add(vAdd, CNetAddr(strI2PSeed[0]));
         }
     }
 
