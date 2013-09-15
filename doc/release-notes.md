@@ -37,6 +37,12 @@ Fix CVE-2013-4627 denial of service, a memory exhaustion attack that could crash
 
 Fix a regression that caused excessive writing of the peers.dat file.
 
+Backport IRC seed
+
+I2P Library upgrade
+
+Add coin control
+
 Add option for bloom filtering.
 
 Fix Hebrew translation.
