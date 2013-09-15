@@ -43,7 +43,7 @@ static boost::thread_group* rpc_worker_group = NULL;
 
 static inline unsigned short GetDefaultRPCPort()
 {
-    return GetBoolArg("-testnet", false) ? 19332 : 9332;
+    return GetBoolArg("-testnet", false) ? 19376 : 9376;
 }
 
 Object JSONRPCError(int code, const string& message)
@@ -120,6 +120,34 @@ std::string HexBits(unsigned int nBits)
     return HexStr(BEGIN(uBits.cBits), END(uBits.cBits));
 }
 
+uint256 ParseHashV(const Value& v, string strName)
+{
+    string strHex;
+    if (v.type() == str_type)
+        strHex = v.get_str();
+    if (!IsHex(strHex)) // Note: IsHex("") is false
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
+    uint256 result;
+    result.SetHex(strHex);
+    return result;
+}
+uint256 ParseHashO(const Object& o, string strKey)
+{
+    return ParseHashV(find_value(o, strKey), strKey);
+}
+vector<unsigned char> ParseHexV(const Value& v, string strName)
+{
+    string strHex;
+    if (v.type() == str_type)
+        strHex = v.get_str();
+    if (!IsHex(strHex))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
+    return ParseHex(strHex);
+}
+vector<unsigned char> ParseHexO(const Object& o, string strKey)
+{
+    return ParseHexV(find_value(o, strKey), strKey);
+}
 
 
 ///
@@ -1146,6 +1174,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "stop"                   && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "getaddednodeinfo"       && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "getnetworkhashps"       && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "getnetworkhashps"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
     if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
     if (strMethod == "setmininput"            && n > 0) ConvertTo<double>(params[0]);

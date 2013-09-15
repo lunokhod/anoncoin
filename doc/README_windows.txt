@@ -1,4 +1,4 @@
-Anoncoin 0.8.3 BETA
+Anoncoin 0.8.5.2 BETA
 
 Copyright (c) 2009-2013 Bitcoin Developers
 Copyright (c) 2011-2013 Litecoin Developers
