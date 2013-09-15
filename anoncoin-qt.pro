@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = anoncoin-qt
 macx:TARGET = "Anoncoin-Qt"
-VERSION = 0.8.3.7
+VERSION = 0.8.5.2
 INCLUDEPATH += src src/json src/qt i2psam
 QT += core gui network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets

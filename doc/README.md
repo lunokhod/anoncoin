@@ -1,4 +1,4 @@
-Anoncoin 0.8.3 BETA
+Anoncoin 0.8.5.2 BETA
 ====================
 
 Copyright (c) 2009-2013 Bitcoin Developers
@@ -31,9 +31,6 @@ Unpack the files into a directory and run:
 - bin/32/anoncoind (headless, 32-bit)
 - bin/64/anoncoin-qt (GUI, 64-bit)
 - bin/64/anoncoind (headless, 64-bit)
-
-See the documentation at the [Anoncoin Wiki](http://anoncoin.info)
-for help and more information.
 
 
 Other Pages
