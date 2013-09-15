@@ -1394,6 +1394,7 @@ void ThreadDNSAddressSeed()
             CAddress addr(CService((const std::string&)strI2PSeed[i]));
             addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
             vAdd.push_back(addr);
+            found++;
         }
         addrman.Add(vAdd, CNetAddr(strI2PSeed[0], true));
 
@@ -1407,20 +1408,15 @@ void ThreadDNSAddressSeed()
             if (HaveNameProxy()) {
                 AddOneShot(strDNSSeed[seed_idx][1]);
             } else {
-                vector<CNetAddr> vaddr;
                 vector<CAddress> vAdd;
-                if (LookupHost(strDNSSeed[seed_idx][1], vaddr))
-                {
-                    BOOST_FOREACH(CNetAddr& ip, vaddr)
-                    {
-                        int nOneDay = 24*3600;
-                        CAddress addr = CAddress(CService(ip, GetDefaultPort()));
-                        addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
-                        vAdd.push_back(addr);
-                        found++;
-                    }
+                for (size_t i = 0; i < ARRAYLEN(strI2PSeed); i++) {
+                    int nOneDay = 24*3600;
+                    CAddress addr(CService((const std::string&)strI2PSeed[i]));
+                    addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
+                    vAdd.push_back(addr);
+                found++;
                 }
-                addrman.Add(vAdd, CNetAddr(strDNSSeed[seed_idx][0], true));
+                addrman.Add(vAdd, CNetAddr(strI2PSeed[0], true));
             }
         }
     }
