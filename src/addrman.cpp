@@ -167,7 +167,7 @@ int CAddrMan::ShrinkNew(int nUBucket)
                 mapInfo.erase(*it);
                 nNew--;
             }
-            vNew.erase(it);
+            vNew.erase(*it);
             return 0;
         }
     }
