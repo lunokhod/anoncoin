@@ -1109,6 +1109,37 @@ static const int64 nTargetTimespan = 86184; //420 * 205.2; = 86184 // Anoncoin: 
 static const int64 nTargetSpacing = 205;//3.42 * 60; // Anoncoin: 3.42 minutes
 static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 
+
+// Protocol 3
+
+static const int64 fNewDifficultyProtocol3 = 88000;
+
+static const int64 nMaxAdjustDown = 20; // 20% adjustment down
+static const int64 nMaxAdjustUp = 5; // 5% adjustment up
+
+static const int64 nTargetTimespanAdjDown = (100 + nMaxAdjustDown) / 100;
+
+static const int64 nMinActualTimespan =  205 * (100 - nMaxAdjustUp) / 100;
+static const int64 nMaxActualTimespan = 205 * (100 + nMaxAdjustDown) / 100;
+
+unsigned int NeoComputeMinWork(unsigned int nBase, int64 nTime)
+{
+    CBigNum bnResult;
+    bnResult.SetCompact(nBase);
+    while (nTime > 0 && bnResult < bnProofOfWorkLimit)
+    {
+        // Maximum adjustment for protocol 3.
+        bnResult *= (100 + nMaxAdjustDown);
+        bnResult /= 100;
+        // ... in best-case exactly adjustment times-normal target time
+        nTime -= nTargetTimespanAdjDown;
+    }
+    if (bnResult > bnProofOfWorkLimit)
+        bnResult = bnProofOfWorkLimit;
+    return bnResult.GetCompact();
+}
+
+
 //
 // minimum amount of work that could possibly be required nTime after
 // minimum work required was nBase
@@ -1132,6 +1163,58 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
     if (bnResult > bnProofOfWorkLimit)
         bnResult = bnProofOfWorkLimit;
     return bnResult.GetCompact();
+}
+
+// Introduced in Anoncoin
+unsigned int static NeoGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+{
+    unsigned int nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
+
+    // Genesis block
+    if (pindexLast == NULL)
+        return nProofOfWorkLimit;
+
+
+    CBigNum bnNew;
+    bnNew.SetCompact(pindexLast->nBits);
+
+    const CBlockIndex* pindexPrev = pindexLast;
+    if (pindexPrev->pprev == NULL)
+        return bnNew.GetCompact(); // first block
+    const CBlockIndex* pindexPrevPrev = pindexPrev->pprev;
+    if (pindexPrevPrev->pprev == NULL)
+        return bnNew.GetCompact(); // second block
+
+    int64 nActualTimespan= pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
+
+    // Retarget
+    int64 nTargetSpacing = 205;//3.42 * 60; // Anoncoin: 3.42 minutes
+    int64 nInterval = nActualTimespan / nTargetSpacing;
+
+
+    if (nActualTimespan < nMinActualTimespan)
+        nActualTimespan = nMinActualTimespan;
+    if (nActualTimespan > nMaxActualTimespan)
+        nActualTimespan = nMaxActualTimespan;
+
+    bnNew *= ((nInterval - 1) * nTargetSpacing + nActualTimespan + nActualTimespan);
+    bnNew /= ((nInterval + 1) * nTargetSpacing);
+
+    bnNew *= nActualTimespan;
+    bnNew /= nTargetSpacing;
+
+    if (bnNew > bnProofOfWorkLimit)
+        bnNew = bnProofOfWorkLimit;
+
+    /// debug print
+#ifdef __DEBUG
+    printf("NeoGetNextWorkRequired RETARGET\n");
+    printf("nTargetTimespan = %"PRI64d"    nActualTimespan = %"PRI64d"\n", nTargetTimespan, nActualTimespan);
+    printf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
+    printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
+#endif
+
+    return bnNew.GetCompact();
 }
 
 unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
@@ -1357,7 +1440,7 @@ void CBlockHeader::UpdateTime(const CBlockIndex* pindexPrev)
 
     // Updating time can change work required on testnet:
     if (fTestNet)
-        nBits = GetNextWorkRequired(pindexPrev, this);
+        nBits = NeoGetNextWorkRequired(pindexPrev, this);
 }
 
 
@@ -2242,8 +2325,13 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
         nHeight = pindexPrev->nHeight+1;
 
         // Check proof of work
-        if (nBits != GetNextWorkRequired(pindexPrev, this))
-            return state.DoS(100, error("AcceptBlock() : incorrect proof of work"));
+        if (nHeight > fNewDifficultyProtocol3 || fTestNet) {
+            if (nBits != NeoGetNextWorkRequired(pindexPrev, this))
+                return state.DoS(100, error("AcceptBlock() : incorrect proof of work"));
+        } else {
+            if (nBits != GetNextWorkRequired(pindexPrev, this))
+                return state.DoS(100, error("AcceptBlock() : incorrect proof of work"));
+        }
 
         // Check timestamp against prev
         if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -2351,7 +2439,11 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         CBigNum bnNewBlock;
         bnNewBlock.SetCompact(pblock->nBits);
         CBigNum bnRequired;
-        bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
+        if (mapBlockIndex[hash]->nHeight > fNewDifficultyProtocol3 || fTestNet) {
+            bnRequired.SetCompact(NeoComputeMinWork(pcheckpoint->nBits, deltaTime));
+        } else {
+            bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
+        }
         if (bnNewBlock > bnRequired)
         {
             return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work"));
@@ -4149,7 +4241,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// LitecoinMiner
+// AnoncoinMiner
 //
 
 int static FormatHashBlocks(void* pbuffer, unsigned int len)
@@ -4465,7 +4557,11 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         pblock->UpdateTime(pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
+        if (pindexPrev->nHeight > fNewDifficultyProtocol3 || fTestNet) {
+            pblock->nBits          = NeoGetNextWorkRequired(pindexPrev, pblock);
+        } else {
+            pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
+        }
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
         pblocktemplate->vTxSigOps[0] = pblock->vtx[0].GetLegacySigOpCount();
@@ -4556,7 +4652,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         return false;
 
     //// debug print
-    printf("Litecoin RPCMiner:\n");
+    printf("Anoncoin RPCMiner:\n");
     printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
     pblock->print();
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
@@ -4565,7 +4661,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != hashBestChain)
-            return error("LitecoinMiner : generated block is stale");
+            return error("AnoncoinMiner : generated block is stale");
 
         // Remove key from key pool
         reservekey.KeepKey();
@@ -4579,7 +4675,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         // Process this block the same as if we had received it from another node
         CValidationState state;
         if (!ProcessBlock(state, NULL, pblock))
-            return error("LitecoinMiner : ProcessBlock, block not accepted");
+            return error("AnoncoinMiner : ProcessBlock, block not accepted");
     }
 
     return true;
