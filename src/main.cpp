@@ -1114,8 +1114,8 @@ static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 
 static const int64 fNewDifficultyProtocol3 = 88000;
 
-static const int64 nMaxAdjustDown = 20; // 20% adjustment down
-static const int64 nMaxAdjustUp = 5; // 5% adjustment up
+static const int64 nMaxAdjustDown = 5; // 5% max adjustment down
+static const int64 nMaxAdjustUp = 5; // 5% max adjustment up
 
 static const int64 nTargetTimespanAdjDown = (100 + nMaxAdjustDown) / 100;
 
