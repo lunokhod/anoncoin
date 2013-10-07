@@ -1105,38 +1105,80 @@ int64 static GetBlockValue(int nHeight, int64 nFees)
     return nSubsidy + nFees;
 }
 
+// Protocol 1 & 2
+
 static const int64 nTargetTimespan = 86184; //420 * 205.2; = 86184 // Anoncoin: 420 blocks
 static const int64 nTargetSpacing = 205;//3.42 * 60; // Anoncoin: 3.42 minutes
 static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 
+static const int nDifficultySwitchHeight = 15420;
+static const int nDifficultySwitchHeight2 = 77777;
 
 // Protocol 3
 
-static const int64 fNewDifficultyProtocol3 = 88000;
+static const int nDifficultyProtocol3 = 87777;
 
-static const int64 nMaxAdjustDown = 5; // 5% max adjustment down
-static const int64 nMaxAdjustUp = 5; // 5% max adjustment up
 
-static const int64 nTargetTimespanAdjDown = (100 + nMaxAdjustDown) / 100;
+unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBlockHeader *pblock, uint64 TargetBlocksSpacingSeconds, uint64 PastBlocksMin, uint64 PastBlocksMax) {
+    /* current difficulty formula, Anoncoin - kimoto gravity well */
+    const CBlockIndex  *BlockLastSolved             = pindexLast;
+    const CBlockIndex  *BlockReading                = pindexLast;
+    const CBlockHeader *BlockCreating               = pblock;
+                        BlockCreating               = BlockCreating;
+    uint64              PastBlocksMass              = 0;
+    int64               PastRateActualSeconds       = 0;
+    int64               PastRateTargetSeconds       = 0;
+    double              PastRateAdjustmentRatio     = double(1);
+    CBigNum             PastDifficultyAverage;
+    CBigNum             PastDifficultyAveragePrev;
+    double              EventHorizonDeviation;
+    double              EventHorizonDeviationFast;
+    double              EventHorizonDeviationSlow;
 
-static const int64 nMinActualTimespan =  205 * (100 - nMaxAdjustUp) / 100;
-static const int64 nMaxActualTimespan = 205 * (100 + nMaxAdjustDown) / 100;
+    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || (uint64)BlockLastSolved->nHeight < PastBlocksMin) { return bnProofOfWorkLimit.GetCompact(); }
 
-unsigned int NeoComputeMinWork(unsigned int nBase, int64 nTime)
-{
-    CBigNum bnResult;
-    bnResult.SetCompact(nBase);
-    while (nTime > 0 && bnResult < bnProofOfWorkLimit)
-    {
-        // Maximum adjustment for protocol 3.
-        bnResult *= (100 + nMaxAdjustDown);
-        bnResult /= 100;
-        // ... in best-case exactly adjustment times-normal target time
-        nTime -= nTargetTimespanAdjDown;
+    for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
+        if (PastBlocksMax > 0 && i > PastBlocksMax) { break; }
+        PastBlocksMass++;
+
+        if (i == 1) { PastDifficultyAverage.SetCompact(BlockReading->nBits); }
+        else        { PastDifficultyAverage = ((CBigNum().SetCompact(BlockReading->nBits) - PastDifficultyAveragePrev) / i) + PastDifficultyAveragePrev; }
+        PastDifficultyAveragePrev = PastDifficultyAverage;
+
+        PastRateActualSeconds           = BlockLastSolved->GetBlockTime() - BlockReading->GetBlockTime();
+        PastRateTargetSeconds           = TargetBlocksSpacingSeconds * PastBlocksMass;
+        PastRateAdjustmentRatio         = double(1);
+        if (PastRateActualSeconds < 0) { PastRateActualSeconds = 0; }
+        if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
+        PastRateAdjustmentRatio         = double(PastRateTargetSeconds) / double(PastRateActualSeconds);
+        }
+        EventHorizonDeviation           = 1 + (0.7084 * pow((double(PastBlocksMass)/double(144)), -1.228));
+        EventHorizonDeviationFast       = EventHorizonDeviation;
+        EventHorizonDeviationSlow       = 1 / EventHorizonDeviation;
+
+        if (PastBlocksMass >= PastBlocksMin) {
+            if ((PastRateAdjustmentRatio <= EventHorizonDeviationSlow) || (PastRateAdjustmentRatio >= EventHorizonDeviationFast)) { assert(BlockReading); break; }
+        }
+        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
+        BlockReading = BlockReading->pprev;
     }
-    if (bnResult > bnProofOfWorkLimit)
-        bnResult = bnProofOfWorkLimit;
-    return bnResult.GetCompact();
+
+    CBigNum bnNew(PastDifficultyAverage);
+    if (PastRateActualSeconds != 0 && PastRateTargetSeconds != 0) {
+        bnNew *= PastRateActualSeconds;
+        bnNew /= PastRateTargetSeconds;
+    }
+    if (bnNew > bnProofOfWorkLimit) { bnNew = bnProofOfWorkLimit; }
+
+#ifdef _ANONDEBUG
+    /// debug print
+    printf("Difficulty Retarget - Kimoto Gravity Well\n");
+    printf("PastRateAdjustmentRatio = %g\n", PastRateAdjustmentRatio);
+    printf("Before: %08x  %s\n", BlockLastSolved->nBits, CBigNum().SetCompact(BlockLastSolved->nBits).getuint256().ToString().c_str());
+    printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
+#endif
+
+    return bnNew.GetCompact();
 }
 
 
@@ -1146,10 +1188,6 @@ unsigned int NeoComputeMinWork(unsigned int nBase, int64 nTime)
 //
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
 {
-    // Testnet has min-difficulty blocks
-    // after nTargetSpacing*2 time between blocks:
-    if (fTestNet && nTime > nTargetSpacing*2)
-        return bnProofOfWorkLimit.GetCompact();
 
     CBigNum bnResult;
     bnResult.SetCompact(nBase);
@@ -1165,59 +1203,19 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
     return bnResult.GetCompact();
 }
 
-// Introduced in Anoncoin
 unsigned int static NeoGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-    unsigned int nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
+    static const int64  BlocksTargetSpacing         = 3 * 60; // 3 minutes
+    unsigned int        TimeDaySeconds              = 60 * 60 * 24;
+    int64               PastSecondsMin              = TimeDaySeconds * 0.25;
+    int64               PastSecondsMax              = TimeDaySeconds * 7;
+    uint64              PastBlocksMin               = PastSecondsMin / BlocksTargetSpacing;
+    uint64              PastBlocksMax               = PastSecondsMax / BlocksTargetSpacing;
 
-    // Genesis block
-    if (pindexLast == NULL)
-        return nProofOfWorkLimit;
-
-
-    CBigNum bnNew;
-    bnNew.SetCompact(pindexLast->nBits);
-
-    const CBlockIndex* pindexPrev = pindexLast;
-    if (pindexPrev->pprev == NULL)
-        return bnNew.GetCompact(); // first block
-    const CBlockIndex* pindexPrevPrev = pindexPrev->pprev;
-    if (pindexPrevPrev->pprev == NULL)
-        return bnNew.GetCompact(); // second block
-
-    int64 nActualTimespan= pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
-
-    // Retarget
-    int64 nTargetSpacing = 205;//3.42 * 60; // Anoncoin: 3.42 minutes
-    int64 nInterval = nActualTimespan / nTargetSpacing;
-
-
-    if (nActualTimespan < nMinActualTimespan)
-        nActualTimespan = nMinActualTimespan;
-    if (nActualTimespan > nMaxActualTimespan)
-        nActualTimespan = nMaxActualTimespan;
-
-    bnNew *= ((nInterval - 1) * nTargetSpacing + nActualTimespan + nActualTimespan);
-    bnNew /= ((nInterval + 1) * nTargetSpacing);
-
-    bnNew *= nActualTimespan;
-    bnNew /= nTargetSpacing;
-
-    if (bnNew > bnProofOfWorkLimit)
-        bnNew = bnProofOfWorkLimit;
-
-    /// debug print
-#ifdef __DEBUG
-    printf("NeoGetNextWorkRequired RETARGET\n");
-    printf("nTargetTimespan = %"PRI64d"    nActualTimespan = %"PRI64d"\n", nTargetTimespan, nActualTimespan);
-    printf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
-    printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
-#endif
-
-    return bnNew.GetCompact();
+    return KimotoGravityWell(pindexLast, pblock, BlocksTargetSpacing, PastBlocksMin, PastBlocksMax);
 }
 
-unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+unsigned int static OldGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
     unsigned int nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
 
@@ -1226,8 +1224,7 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
         return nProofOfWorkLimit;
 
     // Anoncoin difficulty adjustment protocol switch (Thanks to FeatherCoin for this idea)
-    static const int nDifficultySwitchHeight = 15420;
-    static const int nDifficultySwitchHeight2 = 77777;
+
     static const int newTargetTimespan = 2050;
     int nHeight = pindexLast->nHeight + 1;
     bool fNewDifficultyProtocol = (nHeight >= nDifficultySwitchHeight || fTestNet);
@@ -1306,7 +1303,7 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 
     /// debug print
 #ifdef __DEBUG
-    printf("GetNextWorkRequired RETARGET\n");
+    printf("OldGetNextWorkRequired RETARGET\n");
     printf("nTargetTimespan = %"PRI64d"    nActualTimespan = %"PRI64d"\n", nTargetTimespan, nActualTimespan);
     printf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
     printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
@@ -1314,6 +1311,17 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 
     return bnNew.GetCompact();
 }
+
+unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+{
+    assert(pindexLast);
+    if (pindexLast->nHeight > nDifficultyProtocol3 || fTestNet) {
+        return NeoGetNextWorkRequired(pindexLast, pblock);
+    } else {
+        return OldGetNextWorkRequired(pindexLast, pblock);
+    }
+}
+
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 {
@@ -2325,13 +2333,9 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
         nHeight = pindexPrev->nHeight+1;
 
         // Check proof of work
-        if (nHeight > fNewDifficultyProtocol3 || fTestNet) {
-            if (nBits != NeoGetNextWorkRequired(pindexPrev, this))
-                return state.DoS(100, error("AcceptBlock() : incorrect proof of work"));
-        } else {
-            if (nBits != GetNextWorkRequired(pindexPrev, this))
-                return state.DoS(100, error("AcceptBlock() : incorrect proof of work"));
-        }
+        if (nBits != GetNextWorkRequired(pindexPrev, this))
+            return state.DoS(100, error("AcceptBlock() : incorrect proof of work"));
+
 
         // Check timestamp against prev
         if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -2436,17 +2440,20 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         {
             return state.DoS(100, error("ProcessBlock() : block with timestamp before last checkpoint"));
         }
-        CBigNum bnNewBlock;
-        bnNewBlock.SetCompact(pblock->nBits);
-        CBigNum bnRequired;
-        if (mapBlockIndex[hash]->nHeight > fNewDifficultyProtocol3 || fTestNet) {
-            bnRequired.SetCompact(NeoComputeMinWork(pcheckpoint->nBits, deltaTime));
-        } else {
-            bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-        }
-        if (bnNewBlock > bnRequired)
+        // Now that we are using a FIR filter (see above) this is no longer
+        // a straightforward calculation.
+        // But we still have to support the old blockchain that's made until now.
+        if (mapBlockIndex[hash]->nHeight < nDifficultyProtocol3)
         {
-            return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work"));
+            CBigNum bnNewBlock;
+            bnNewBlock.SetCompact(pblock->nBits);
+            CBigNum bnRequired;
+            bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
+            bool acceptPeriod = (mapBlockIndex[hash]->nHeight > nDifficultySwitchHeight2 && mapBlockIndex[hash]->nHeight < nDifficultyProtocol3) ? true : false;
+            if (bnNewBlock > bnRequired && acceptPeriod)
+            {
+                return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work"));
+            }
         }
     }
 
@@ -4557,11 +4564,7 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         pblock->UpdateTime(pindexPrev);
-        if (pindexPrev->nHeight > fNewDifficultyProtocol3 || fTestNet) {
-            pblock->nBits          = NeoGetNextWorkRequired(pindexPrev, pblock);
-        } else {
-            pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
-        }
+        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
         pblocktemplate->vTxSigOps[0] = pblock->vtx[0].GetLegacySigOpCount();
