@@ -163,7 +163,18 @@ int CAddrMan::ShrinkNew(int nUBucket)
             {
                 SwapRandom(info.nRandomPos, vRandom.size()-1);
                 vRandom.pop_back();
+#ifdef MAC_OSX
+                // OSX has a nasty bug here. So we create a temporary
+                // pointer, fills it with zeros of the size of info, if it turns 
+                // out to be just one zero, it will fail. Because if not 
+                // OSX crashes Anoncoin because of trying to free a nullpointer.
+                void *test;
+                memset(&test, 0, sizeof info);
+                if (test!=0) mapAddr.erase(info);
+                delete test;
+#else
                 mapAddr.erase(info);
+#endif
                 mapInfo.erase(*it);
                 nNew--;
             }
