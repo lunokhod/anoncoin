@@ -168,6 +168,8 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
+/** Calculate the minimum amount of work a received block needs, without knowing its direct parent  (ProtocolSwitch3) */
+unsigned int NeoComputeMinWork(unsigned int nBase, int64 nTime); // TODO: Unit test.
 /** Get the number of active peers */
 int GetNumBlocksOfPeers();
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
