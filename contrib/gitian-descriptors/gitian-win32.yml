@@ -5,7 +5,8 @@ suites:
 architectures:
 - "i386"
 packages:
-- "mingw32"
+- "g++-mingw-w64"
+- "mingw-w64"
 - "git-core"
 - "unzip"
 - "nsis"
