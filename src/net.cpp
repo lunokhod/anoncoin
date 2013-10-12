@@ -1520,15 +1520,15 @@ void ThreadOpenConnections()
 
         CSemaphoreGrant grant(*semOutbound);
         boost::this_thread::interruption_point();
+        std::vector<CNetAddr> vaddr;
+        std::vector<CAddress> vAdd;
 
         // Add seed nodes if IRC isn't working
         static const char *(*strDNSSeed)[2] = fTestNet ? strTestNetDNSSeed : strMainNetDNSSeed;
-        if (addrman.size()==0 && (GetTime() - nStart > 60) && !fTestNet)
+        if (addrman.size()==0 && (GetTime() - nStart > 15) && !fTestNet)
         {
-            if (!IsI2POnly())
+            if (IsI2POnly())
                 break;
-            std::vector<CNetAddr> vaddr;
-            std::vector<CAddress> vAdd;
             for (unsigned int seed_idx = 0; strDNSSeed[seed_idx][0] != NULL; seed_idx++) {
             if (HaveNameProxy()) {
                 AddOneShot(strDNSSeed[seed_idx][1]);
