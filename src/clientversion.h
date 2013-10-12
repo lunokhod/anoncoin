@@ -9,14 +9,14 @@
 #define CLIENT_VERSION_MAJOR       0
 #define CLIENT_VERSION_MINOR       8
 #define CLIENT_VERSION_REVISION    5
-#define CLIENT_VERSION_BUILD         4
+#define CLIENT_VERSION_BUILD         5
 
 // Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE  true
 
 #define ANONCOIN_VERSION_MAJOR 0
 #define ANONCOIN_VERSION_MINOR 4 // Release number #4 :)
-#define ANONCOIN_VERSION_REVISON 0
+#define ANONCOIN_VERSION_REVISON 2
 #define ANONCOIN_VERSION_BUILD 0
 
 // Copyright year (2009-this)

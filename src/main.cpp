@@ -2443,18 +2443,20 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         // Now that we are using a FIR filter (see above) this is no longer
         // a straightforward calculation.
         // Blockchain is already made. Accept it.
-        /*bool acceptPeriod = (mapBlockIndex[hash]->nHeight > nDifficultySwitchHeight2 && mapBlockIndex[hash]->nHeight < nDifficultyProtocol3) ? true : false;
-        if (mapBlockIndex[hash]->nHeight < nDifficultyProtocol3)
-        {
-            CBigNum bnNewBlock;
-            bnNewBlock.SetCompact(pblock->nBits);
-            CBigNum bnRequired;
-            bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-            if (bnNewBlock > bnRequired)
+        if (mapBlockIndex.count(pblock->hashPrevBlock)) {
+            bool acceptPeriod = (mapBlockIndex[pblock->hashPrevBlock]->nHeight < nDifficultyProtocol3) ? true : false;
+            if (acceptPeriod)
             {
-                return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work"));
+                CBigNum bnNewBlock;
+                bnNewBlock.SetCompact(pblock->nBits);
+                CBigNum bnRequired;
+                bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
+                if (bnNewBlock > bnRequired)
+                {
+                    return state.DoS(100, error("ProcessBlock() : block with too little proof-of-work"));
+                }
             }
-        }*/
+        }
     }
 
 
