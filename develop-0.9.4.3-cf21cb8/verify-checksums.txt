@@ -1,0 +1,8 @@
+SHA1(Anoncoin.dmg)= a840382bfe543ebb8c99a3618a600a0b3671af81
+MD5(Anoncoin.dmg)= 4adea98b183a5bac471a9ae1e1d2cf04
+SHA1(anoncoind)= cc9c492fd030fd302afeecfaed105f41d4f341aa
+MD5(anoncoind)= abdd5e06577f9a6c15841459491f6ae7
+SHA1(anoncoin-cli)= 70219fad1a3ac13616360df6ff329f4d205f377f
+MD5(anoncoin-cli)= 7a2745a148b72a26ca9e09c4b71deac5
+SHA1(anoncoin-qt)= afbd555e7466cec78381865ff1e6059e41a97644
+MD5(anoncoin-qt)= 254b5f7838b4cf3421ebf02d2094fdf7
